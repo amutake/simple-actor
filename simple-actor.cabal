@@ -1,0 +1,30 @@
+name:                simple-actor
+version:             0.1.0.0
+synopsis:            An simple actor framework
+description:         This package provides simple actor framework.
+homepage:            https://github.com/amutake/simple-actor
+license:             BSD3
+license-file:        LICENSE
+author:              Shohei Yasutake
+maintainer:          amutake.s@gmail.com
+copyright:           Copyright (c) 2013 Shohei Yasutake
+category:            Concurrency
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+source-repository head
+  type: git
+  location: git://github.com/amutake/simple-actor.git
+
+library
+  exposed-modules:     Control.Concurrent.Actor
+  -- other-modules:
+  other-extensions:    GeneralizedNewtypeDeriving
+  build-depends:       base >=4.6 && <4.7
+                     , stm >=2.4 && <2.5
+                     , transformers >=0.3 && <0.4
+                     , mtl >=2.1 && <2.2
+  hs-source-dirs:      src
+  ghc-options:         -Wall
+  default-language:    Haskell2010
