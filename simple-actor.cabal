@@ -1,6 +1,6 @@
 name:                simple-actor
 version:             0.1.0.0
-synopsis:            An simple actor framework
+synopsis:            A simple actor framework
 description:         This package provides simple actor framework.
 homepage:            https://github.com/amutake/simple-actor
 license:             BSD3
