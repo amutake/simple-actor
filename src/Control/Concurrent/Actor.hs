@@ -10,6 +10,7 @@ module Control.Concurrent.Actor
   , send
   , receive
   , receiveMaybe
+  , receiveUntil
   , getSelf
   , liftIO
   ) where
@@ -61,6 +62,16 @@ receive = ask >>= liftIO . atomically . readTQueue . mailBox
 
 receiveMaybe :: ActorWorld r (Maybe r)
 receiveMaybe = ask >>= liftIO . atomically . tryReadTQueue . mailBox
+
+receiveUntil :: (r -> Bool) -> ActorWorld r r
+receiveUntil p = do
+  r <- receive
+  if p r
+    then return r
+    else do
+      self <- getSelf
+      send self r
+      receiveUntil p
 
 getSelf :: ActorWorld r (ActorId r)
 getSelf = ask
