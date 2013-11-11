@@ -9,13 +9,14 @@ module Control.Concurrent.Actor
   , wait
   , send
   , receive
+  , receiveMaybe
   , getSelf
   , liftIO
   ) where
 
 import Control.Concurrent (forkIO)
 import Control.Concurrent.STM
-  ( TQueue, newTQueueIO, readTQueue, writeTQueue
+  ( TQueue, newTQueueIO, readTQueue, tryReadTQueue, writeTQueue
   , newTVarIO, readTVar, writeTVar, retry, atomically
   )
 import Control.Applicative (Applicative)
@@ -57,6 +58,9 @@ send actor = liftIO . atomically . writeTQueue (mailBox actor)
 
 receive :: ActorWorld r r
 receive = ask >>= liftIO . atomically . readTQueue . mailBox
+
+receiveMaybe :: ActorWorld r (Maybe r)
+receiveMaybe = ask >>= liftIO . atomically . tryReadTQueue . mailBox
 
 getSelf :: ActorWorld r (ActorId r)
 getSelf = ask
