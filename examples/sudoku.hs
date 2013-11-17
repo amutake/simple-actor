@@ -12,36 +12,54 @@ type Board = [[Char]]
 master :: Behavior (Board, ActorId Board) (Either Board (ActorId Board))
 master (board, top) = do
   self <- getSelf
+  Right aid <- receiveUntil isRight
   mapM_ (send self . Left) (update board)
-  loop
+  loop aid
   where
     isRight (Right _) = True
     isRight _ = False
-    loop = do
-      Left b <- receiveUntil (not . isRight)
-      if isCompleted b
-        then send top b
-        else do
-          Right aid <- receiveUntil isRight
-          send aid b
-          loop
+    loop aid = do
+      r <- receive
+      case r of
+        Right aid' -> do
+          loop aid'
+        Left b -> do
+          if isCompleted b
+            then send top b
+            else do
+              send aid b
+              loop aid
 
 worker :: Behavior (ActorId (Either Board (ActorId Board))) Board
 worker aid = do
-  msg <- receiveMaybe
-  case msg of
-    Nothing -> do
-      self <- getSelf
-      send aid $ Right self
-      worker aid
-    Just board -> do
-      mapM_ (send aid . Left) (update board)
-      worker aid
+  self <- getSelf
+  send aid $ Right self
+  loop2
+  where
+    iterateM :: Monad m => Int -> (a -> m a) -> m a -> m a
+    iterateM 0 _ m = m
+    iterateM n f m = iterateM (n - 1) f (m >>= f)
+    loop1 board = do
+      let boards = iterateM 1 update [board]
+      mapM_ (send aid . Left) boards
+      msg <- receiveMaybe
+      case msg of
+        Nothing -> do
+          self <- getSelf
+          send aid $ Right self
+          loop2
+        Just board' -> loop1 board'
+    loop2 = do
+      board <- receive
+      loop1 board
 
 update :: Board -> [Board]
 update board = do
-  board' <- [ left ++ [left' ++ [val] ++ right'] ++ right | val <- ['1'..'9'] ]
-  elim board'
+  if isCompleted board
+    then return board
+    else do
+      board' <- [ left ++ [left' ++ [val] ++ right'] ++ right | val <- ['1'..'9'] ]
+      elim board'
   where
     (left, fit:right) = break (any (== '0')) board
     (left', _:right') = break (== '0') fit
